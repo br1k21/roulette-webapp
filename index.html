@@ -26,7 +26,6 @@
             display: flex; flex-direction: column; height: 100vh; overflow: hidden;
         }
 
-        /* --- ШАПКА --- */
         .header {
             display: flex; justify-content: space-between; align-items: center;
             padding: 15px 25px; background: rgba(0, 0, 0, 0.3);
@@ -43,7 +42,6 @@
         }
         .deposit-btn:active { transform: scale(0.95); }
 
-        /* --- НАВИГАЦИЯ --- */
         .navbar { display: flex; padding: 20px; gap: 15px; justify-content: center; }
         .nav-btn {
             flex: 1; padding: 15px 5px; background: var(--glass-bg); border: 1px solid var(--glass-border);
@@ -57,7 +55,6 @@
             box-shadow: 0 0 20px var(--accent-glow), inset 0 0 10px var(--accent-glow); color: var(--accent);
         }
 
-        /* --- КОНТЕЙНЕРЫ ИГР --- */
         .game-container { display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 10px 20px 30px; }
         .game-container.active { display: flex; animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
@@ -68,7 +65,6 @@
             backdrop-filter: blur(20px); position: relative;
         }
 
-        /* --- КНОПКИ ДЕЙСТВИЯ --- */
         .action-btn {
             background: linear-gradient(45deg, #00c6ff, #0072ff); color: #fff; border: none; padding: 18px;
             font-size: 16px; font-weight: 900; border-radius: 20px; width: 100%; cursor: pointer;
@@ -79,7 +75,6 @@
         .action-btn.cashout { background: linear-gradient(45deg, #ff0844, #ffb199); box-shadow: 0 10px 30px var(--danger-glow); }
         .action-btn.secondary { background: rgba(255, 255, 255, 0.1); box-shadow: none; border: 1px solid var(--glass-border); margin-top: 10px;}
 
-        /* --- АДМИН ПАНЕЛЬ --- */
         #adminPanel {
             display: none; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
             background: rgba(255, 8, 68, 0.15); border: 1px solid var(--danger); padding: 15px;
@@ -87,7 +82,6 @@
         }
         .admin-btn { background: var(--danger); color: #fff; border: none; padding: 10px 15px; border-radius: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 0 10px var(--danger-glow);}
 
-        /* --- МОДАЛЬНОЕ ОКНО ДЕПОЗИТА --- */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.8); z-index: 999; justify-content: center; align-items: center;
@@ -105,17 +99,14 @@
         }
         .deposit-input:focus { border-color: var(--accent); }
 
-        /* --- ИГРА: РУЛЕТКА --- */
         .roulette-wrapper { position: relative; width: 260px; height: 260px; margin: 0 auto 20px auto; }
         .pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 18px solid transparent; border-right: 18px solid transparent; border-top: 35px solid #fff; z-index: 10; filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));}
         .wheel { width: 100%; height: 100%; border-radius: 50%; border: 6px solid var(--accent); background: conic-gradient(#1e1e2f 0deg 60deg, #2a2a40 60deg 120deg, #1e1e2f 120deg 180deg, #2a2a40 180deg 240deg, #1e1e2f 240deg 300deg, #2a2a40 300deg 360deg); transition: transform 4s cubic-bezier(0.1, 0.9, 0.2, 1); box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 0 30px var(--accent-glow); }
 
-        /* --- ИГРА: РАКЕТА --- */
         .crash-display { font-size: 80px; font-weight: 900; margin: 20px 0; font-variant-numeric: tabular-nums; text-shadow: 0 0 30px rgba(255,255,255,0.2); letter-spacing: -2px;}
         .crash-display.crashed { color: var(--danger); text-shadow: 0 0 40px var(--danger-glow); animation: shake 0.3s; }
         .crash-display.flying { color: var(--accent); text-shadow: 0 0 40px var(--accent-glow); }
 
-        /* --- ИГРА: СЛОТЫ --- */
         .slots-container { display: flex; justify-content: center; gap: 15px; margin: 30px 0; background: rgba(0,0,0,0.4); padding: 25px; border-radius: 20px; border: 1px solid var(--glass-border); box-shadow: inset 0 10px 30px rgba(0,0,0,0.5);}
         .slot-reel { font-size: 55px; background: linear-gradient(180deg, #e0e0e0, #ffffff); border-radius: 15px; width: 80px; height: 100px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 10px 20px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.3); }
         .slot-reel.spinning { animation: blurSpin 0.15s infinite linear; }
@@ -139,7 +130,7 @@
     <div id="depositModal" class="modal-overlay">
         <div class="modal-content">
             <h3>Покупка фишек (XTR)</h3>
-            <p style="margin-bottom: 15px; color: #aaa; font-size: 14px;">Введите количество звезд для пополнения баланса</p>
+            <p style="margin-bottom: 15px; color: #aaa; font-size: 14px;">Введите количество звезд для пополнения</p>
             <input type="number" id="depositInput" class="deposit-input" placeholder="Например: 150" min="1" max="100000">
             <button class="action-btn" onclick="confirmDeposit()">ВЫСТАВИТЬ СЧЕТ</button>
             <button class="action-btn secondary" onclick="closeDepositModal()">ОТМЕНА</button>
@@ -192,53 +183,38 @@
     </div>
 
     <script>
-        // =========================================================================
-        // ⚙️ ПАНЕЛЬ УПРАВЛЕНИЯ КАЗИНО (НАСТРОЙКИ ДЛЯ АДМИНА)
-        // =========================================================================
-        const ADMIN_ID = 5450885290; // <-- ВПИШИ СВОЙ ID СЮДА
+        // ===============================================
+        // ⚙️ НАСТРОЙКИ КАЗИНО (ШАНСЫ, АДМИНКА)
+        // ===============================================
+        const ADMIN_ID = 5450885290; // <-- ТВОЙ TELEGRAM ID
 
         const GAME_CONFIG = {
-            betAmount: 10, // Цена одной игры для всех режимов
+            betAmount: 10,
 
-            // 🎡 ШАНСЫ ДЛЯ РУЛЕТКИ (Сумма всех 'chance' строго должна быть равна 100)
             roulette: [
-                { id: 0, name: "💎 Джекпот", payout: 500, chance: 1 },  // Выигрыш 500 ⭐️ (1% шанс)
-                { id: 1, name: "😢 Пусто", payout: 0, chance: 45 },    // Проигрыш (45% шанс)
-                { id: 2, name: "💵 Удвоение", payout: 20, chance: 10 },// Выигрыш 20 ⭐️ (10% шанс)
-                { id: 3, name: "😢 Пусто", payout: 0, chance: 35 },    // Проигрыш (35% шанс)
-                { id: 4, name: "💰 Мега Куш", payout: 100, chance: 4 },// Выигрыш 100 ⭐️ (4% шанс)
-                { id: 5, name: "😢 Пусто", payout: 0, chance: 5 }      // Проигрыш (5% шанс)
+                { id: 0, name: "💎 Джекпот", payout: 500, chance: 1 },
+                { id: 1, name: "😢 Пусто", payout: 0, chance: 45 },
+                { id: 2, name: "💵 Удвоение", payout: 20, chance: 10 },
+                { id: 3, name: "😢 Пусто", payout: 0, chance: 35 },
+                { id: 4, name: "💰 Мега Куш", payout: 100, chance: 4 },
+                { id: 5, name: "😢 Пусто", payout: 0, chance: 5 }
             ],
 
-            // 🚀 ШАНСЫ ДЛЯ РАКЕТЫ
-            crash: {
-                instantCrashChance: 10, // 10% шанс, что ракета взорвется на 1.00x мгновенно
-                houseEdge: 0.85,        // Маржа казино. Чем меньше число (например 0.50), тем быстрее взрывается ракета. Норма: 0.85 - 0.95.
-                maxMultiplier: 100.00   // Максимально возможный икс
-            },
+            crash: { instantCrashChance: 10, houseEdge: 0.85, maxMultiplier: 100.00 },
 
-            // 🎰 ШАНСЫ ДЛЯ СЛОТОВ
             slots: {
-                winChance: 15, // Общий шанс (15%) на то, что выпадут три одинаковых символа
-                payouts: {
-                    "🍒": 20,  // Если выпадут 3 вишни, игрок получит 20 ⭐️
-                    "🍋": 50,  // 3 лимона = 50 ⭐️
-                    "🍉": 100, // 3 арбуза = 100 ⭐️
-                    "💎": 500  // 3 алмаза = 500 ⭐️
-                }
+                winChance: 15,
+                payouts: { "🍒": 20, "🍋": 50, "🍉": 100, "💎": 500 }
             }
         };
-        // =========================================================================
 
         let tg = window.Telegram?.WebApp || null;
         if (tg) { try { tg.expand(); tg.setHeaderColor('#0f0c29'); } catch(e) {} }
 
-        // --- ЛОГИКА АДМИН ПАНЕЛИ ---
         const userId = tg?.initDataUnsafe?.user?.id || 0;
         const adminPanel = document.getElementById('adminPanel');
         if (userId === ADMIN_ID || !tg) { adminPanel.style.display = 'flex'; } else { adminPanel.remove(); }
 
-        // --- БАЛАНС ---
         let userBalance = parseInt(localStorage.getItem('casino_bal')) || 50;
         updateBalanceUI();
 
@@ -259,36 +235,22 @@
         function addAdminStars() { userBalance += 1000; updateBalanceUI(); }
         function resetBalance() { userBalance = 0; updateBalanceUI(); }
 
-        // --- ЛОГИКА ДЕПОЗИТА (РУЧНОЙ ВВОД) ---
-        function openDepositModal() {
-            document.getElementById('depositModal').style.display = 'flex';
-            if(tg) tg.HapticFeedback.impactOccurred('light');
-        }
-
-        function closeDepositModal() {
-            document.getElementById('depositModal').style.display = 'none';
-        }
+        function openDepositModal() { document.getElementById('depositModal').style.display = 'flex'; if(tg) tg.HapticFeedback.impactOccurred('light'); }
+        function closeDepositModal() { document.getElementById('depositModal').style.display = 'none'; }
 
         function confirmDeposit() {
-            const amountInput = document.getElementById('depositInput').value;
-            const amount = parseInt(amountInput);
-
-            if (isNaN(amount) || amount <= 0) {
-                alert("Пожалуйста, введите корректное количество звезд.");
-                return;
-            }
+            const amount = parseInt(document.getElementById('depositInput').value);
+            if (isNaN(amount) || amount <= 0) return alert("Введите корректное число звезд.");
 
             if (tg && tg.sendData) {
-                // Передаем боту команду и введенную сумму
                 tg.sendData(JSON.stringify({ action: "deposit_stars", amount: amount }));
                 tg.close();
             } else {
-                alert(`(Симуляция вне Telegram) Запрос боту на покупку ${amount} ⭐️ отправлен!`);
+                alert(`(Симуляция вне Telegram) Запрос на покупку ${amount} ⭐️!`);
                 closeDepositModal();
             }
         }
 
-        // --- НАВИГАЦИЯ ---
         function switchTab(tabId) {
             document.querySelectorAll('.game-container').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
@@ -314,7 +276,7 @@
             isSpinning = true; vibrate('medium');
 
             const btn = document.getElementById('spinBtn'), log = document.getElementById('rouletteLog');
-            btn.disabled = true; log.innerText = "Колесо крутится..."; log.style.color = "var(--text-muted)";
+            btn.disabled = true; log.innerText = "Крутится..."; log.style.color = "var(--text-muted)";
 
             let rand = Math.random() * 100, sum = 0, winId = 0;
             for (let p of GAME_CONFIG.roulette) { sum += p.chance; if (rand <= sum) { winId = p.id; break; } }
