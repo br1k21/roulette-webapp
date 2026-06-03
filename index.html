@@ -3,115 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NeoCasino PRO</title>
+    <title>Neon Galaxy Casino</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
+
         :root {
-            --bg: #090a0f;
-            --surface: rgba(20, 22, 30, 0.7);
-            --accent: #00ffcc;
-            --accent-glow: rgba(0, 255, 204, 0.4);
-            --danger: #ff2a55;
-            --gold: #ffd700;
-            --text: #ffffff;
-            --text-muted: #8b92a5;
+            --bg-grad-1: #0f0c29; --bg-grad-2: #302b63; --bg-grad-3: #24243e;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent: #00f2fe; --accent-glow: rgba(0, 242, 254, 0.5);
+            --danger: #ff0844; --danger-glow: rgba(255, 8, 68, 0.5);
+            --gold: #f6d365; --gold-glow: rgba(246, 211, 101, 0.5);
+            --text: #ffffff; --text-muted: #a0a5b5;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
 
         body {
-            background-color: var(--bg); color: var(--text);
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, var(--bg-grad-1), var(--bg-grad-2), var(--bg-grad-3));
+            color: var(--text); font-family: 'Montserrat', sans-serif;
             display: flex; flex-direction: column; height: 100vh; overflow: hidden;
-            background: radial-gradient(circle at 50% 0%, #1a1c29 0%, #090a0f 100%);
         }
 
-        /* --- ШАПКА И БАЛАНС --- */
+        /* --- ШАПКА --- */
         .header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 20px; background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.05);
-            z-index: 100;
+            padding: 15px 25px; background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(15px); border-bottom: 1px solid var(--glass-border);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5); z-index: 100;
         }
         .balance-box { display: flex; flex-direction: column; }
-        .balance-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;}
-        .balance-value { font-size: 22px; font-weight: 900; color: var(--gold); text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+        .balance-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px;}
+        .balance-value { font-size: 24px; font-weight: 900; color: var(--gold); text-shadow: 0 0 15px var(--gold-glow); display: flex; align-items: center; gap: 5px;}
         .deposit-btn {
-            background: linear-gradient(45deg, #ffd700, #ffaa00); color: #000;
-            border: none; padding: 8px 16px; border-radius: 10px; font-weight: 800;
-            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3); cursor: pointer;
+            background: linear-gradient(45deg, #f6d365 0%, #fda085 100%); color: #000;
+            border: none; padding: 10px 20px; border-radius: 20px; font-weight: 900; font-size: 14px;
+            box-shadow: 0 0 20px var(--gold-glow); cursor: pointer; transition: transform 0.2s;
         }
+        .deposit-btn:active { transform: scale(0.95); }
 
         /* --- НАВИГАЦИЯ --- */
-        .navbar { display: flex; padding: 15px; gap: 10px; }
+        .navbar { display: flex; padding: 20px; gap: 15px; justify-content: center; }
         .nav-btn {
-            flex: 1; padding: 12px; background: var(--surface); border: 1px solid rgba(255,255,255,0.1);
-            color: var(--text); border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.3s;
+            flex: 1; padding: 15px 5px; background: var(--glass-bg); border: 1px solid var(--glass-border);
+            color: var(--text); border-radius: 16px; font-weight: 700; font-size: 14px; cursor: pointer;
+            transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 5px;
+            backdrop-filter: blur(10px);
         }
-        .nav-btn.active { background: var(--accent); color: #000; border-color: var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
+        .nav-btn span { font-size: 24px; }
+        .nav-btn.active {
+            background: rgba(0, 242, 254, 0.1); border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow), inset 0 0 10px var(--accent-glow); color: var(--accent);
+        }
 
-        /* --- ИГРОВЫЕ ЗОНЫ --- */
-        .game-container { display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 15px; }
-        .game-container.active { display: flex; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        /* --- КОНТЕЙНЕРЫ ИГР --- */
+        .game-container { display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 10px 20px 30px; }
+        .game-container.active { display: flex; animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
         .panel {
-            background: var(--surface); border-radius: 24px; padding: 30px 20px; width: 100%; max-width: 380px;
-            text-align: center; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-            backdrop-filter: blur(10px); position: relative;
+            background: var(--glass-bg); border-radius: 30px; padding: 40px 20px; width: 100%; max-width: 400px;
+            text-align: center; border: 1px solid var(--glass-border); box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            backdrop-filter: blur(20px); position: relative;
         }
 
-        /* --- КНОПКИ --- */
+        /* --- КНОПКИ ДЕЙСТВИЯ --- */
         .action-btn {
-            background: linear-gradient(45deg, #00ffcc, #00b3ff); color: #000; border: none; padding: 16px;
-            font-size: 18px; font-weight: 900; border-radius: 16px; width: 100%; cursor: pointer;
-            text-transform: uppercase; box-shadow: 0 8px 25px var(--accent-glow); margin-top: 20px; transition: 0.2s;
+            background: linear-gradient(45deg, #00c6ff, #0072ff); color: #fff; border: none; padding: 18px;
+            font-size: 16px; font-weight: 900; border-radius: 20px; width: 100%; cursor: pointer;
+            text-transform: uppercase; box-shadow: 0 10px 30px rgba(0, 114, 255, 0.4); margin-top: 25px; transition: 0.2s; letter-spacing: 1px;
         }
-        .action-btn:active { transform: translateY(2px); }
-        .action-btn:disabled { background: #2a2d3a; color: #555; box-shadow: none; transform: none; }
-        .action-btn.cashout { background: linear-gradient(45deg, #ff2a55, #ff5500); box-shadow: 0 8px 25px rgba(255, 42, 85, 0.4); color: #fff;}
+        .action-btn:active { transform: translateY(3px); box-shadow: 0 5px 15px rgba(0, 114, 255, 0.4); }
+        .action-btn:disabled { background: #333; color: #777; box-shadow: none; transform: none; }
+        .action-btn.cashout { background: linear-gradient(45deg, #ff0844, #ffb199); box-shadow: 0 10px 30px var(--danger-glow); }
+        .action-btn.secondary { background: rgba(255, 255, 255, 0.1); box-shadow: none; border: 1px solid var(--glass-border); margin-top: 10px;}
 
         /* --- АДМИН ПАНЕЛЬ --- */
         #adminPanel {
             display: none; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(255, 42, 85, 0.1); border: 1px solid var(--danger); padding: 10px 20px;
-            border-radius: 12px; z-index: 1000;
+            background: rgba(255, 8, 68, 0.15); border: 1px solid var(--danger); padding: 15px;
+            border-radius: 20px; z-index: 1000; backdrop-filter: blur(10px); flex-direction: row; gap: 10px; align-items: center;
         }
-        .admin-btn { background: var(--danger); color: #fff; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer;}
+        .admin-btn { background: var(--danger); color: #fff; border: none; padding: 10px 15px; border-radius: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 0 10px var(--danger-glow);}
 
-        /* --- РУЛЕТКА --- */
-        .roulette-wrapper { position: relative; width: 240px; height: 240px; margin: 0 auto 20px auto; }
-        .pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid #fff; z-index: 10; }
-        .wheel { width: 100%; height: 100%; border-radius: 50%; border: 4px solid var(--accent); background: conic-gradient(#14161e 0deg 60deg, #1f222e 60deg 120deg, #14161e 120deg 180deg, #1f222e 180deg 240deg, #14161e 240deg 300deg, #1f222e 300deg 360deg); transition: transform 4s cubic-bezier(0.1, 0.9, 0.2, 1); }
-        
-        /* --- CRASH --- */
-        .crash-display { font-size: 72px; font-weight: 900; margin: 20px 0; font-variant-numeric: tabular-nums; text-shadow: 0 0 20px rgba(255,255,255,0.1); }
-        .crash-display.crashed { color: var(--danger); text-shadow: 0 0 30px rgba(255, 42, 85, 0.5); }
-        .crash-display.flying { color: var(--accent); text-shadow: 0 0 30px var(--accent-glow); }
-        
-        /* --- СЛОТЫ --- */
-        .slots-container { display: flex; justify-content: center; gap: 10px; margin: 30px 0; background: rgba(0,0,0,0.5); padding: 20px; border-radius: 16px; border: 2px solid rgba(255,255,255,0.1); }
-        .slot-reel { font-size: 50px; background: #fff; border-radius: 12px; width: 70px; height: 90px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 5px 15px rgba(0,0,0,0.3); }
-        .slot-reel.spinning { animation: blurSpin 0.2s infinite; }
-        @keyframes blurSpin { 0% { filter: blur(2px); transform: translateY(-5px); } 100% { filter: blur(2px); transform: translateY(5px); } }
+        /* --- МОДАЛЬНОЕ ОКНО ДЕПОЗИТА --- */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); z-index: 999; justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: var(--bg-grad-2); border-radius: 25px; padding: 30px; width: 90%; max-width: 350px;
+            text-align: center; border: 1px solid var(--accent); box-shadow: 0 0 40px var(--accent-glow);
+        }
+        .modal-content h3 { margin-bottom: 20px; font-size: 20px; color: var(--gold); }
+        .deposit-input {
+            width: 100%; padding: 15px; border-radius: 15px; border: 2px solid var(--glass-border);
+            background: rgba(0,0,0,0.3); color: #fff; font-size: 24px; text-align: center; font-weight: bold;
+            outline: none; margin-bottom: 10px; font-family: 'Montserrat', sans-serif;
+        }
+        .deposit-input:focus { border-color: var(--accent); }
 
-        .log-text { font-size: 16px; font-weight: bold; margin-top: 10px; min-height: 24px; color: var(--text-muted);}
+        /* --- ИГРА: РУЛЕТКА --- */
+        .roulette-wrapper { position: relative; width: 260px; height: 260px; margin: 0 auto 20px auto; }
+        .pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 18px solid transparent; border-right: 18px solid transparent; border-top: 35px solid #fff; z-index: 10; filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));}
+        .wheel { width: 100%; height: 100%; border-radius: 50%; border: 6px solid var(--accent); background: conic-gradient(#1e1e2f 0deg 60deg, #2a2a40 60deg 120deg, #1e1e2f 120deg 180deg, #2a2a40 180deg 240deg, #1e1e2f 240deg 300deg, #2a2a40 300deg 360deg); transition: transform 4s cubic-bezier(0.1, 0.9, 0.2, 1); box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 0 30px var(--accent-glow); }
+
+        /* --- ИГРА: РАКЕТА --- */
+        .crash-display { font-size: 80px; font-weight: 900; margin: 20px 0; font-variant-numeric: tabular-nums; text-shadow: 0 0 30px rgba(255,255,255,0.2); letter-spacing: -2px;}
+        .crash-display.crashed { color: var(--danger); text-shadow: 0 0 40px var(--danger-glow); animation: shake 0.3s; }
+        .crash-display.flying { color: var(--accent); text-shadow: 0 0 40px var(--accent-glow); }
+
+        /* --- ИГРА: СЛОТЫ --- */
+        .slots-container { display: flex; justify-content: center; gap: 15px; margin: 30px 0; background: rgba(0,0,0,0.4); padding: 25px; border-radius: 20px; border: 1px solid var(--glass-border); box-shadow: inset 0 10px 30px rgba(0,0,0,0.5);}
+        .slot-reel { font-size: 55px; background: linear-gradient(180deg, #e0e0e0, #ffffff); border-radius: 15px; width: 80px; height: 100px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 10px 20px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.3); }
+        .slot-reel.spinning { animation: blurSpin 0.15s infinite linear; }
+
+        @keyframes blurSpin { 0% { filter: blur(3px); transform: translateY(-10px); } 100% { filter: blur(3px); transform: translateY(10px); } }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px) rotate(-5deg);} 75% {transform: translateX(5px) rotate(5deg);} }
+
+        .log-text { font-size: 16px; font-weight: 700; margin-top: 15px; min-height: 24px; color: var(--text-muted);}
     </style>
 </head>
 <body>
 
     <div class="header">
         <div class="balance-box">
-            <span class="balance-label">Твой баланс</span>
+            <span class="balance-label">Баланс Звезд</span>
             <span class="balance-value" id="uiBalance">0 ⭐️</span>
         </div>
-        <button class="deposit-btn" onclick="requestDeposit()">ПОПОЛНИТЬ</button>
+        <button class="deposit-btn" onclick="openDepositModal()">ПОПОЛНИТЬ</button>
+    </div>
+
+    <div id="depositModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Покупка фишек (XTR)</h3>
+            <p style="margin-bottom: 15px; color: #aaa; font-size: 14px;">Введите количество звезд для пополнения баланса</p>
+            <input type="number" id="depositInput" class="deposit-input" placeholder="Например: 150" min="1" max="100000">
+            <button class="action-btn" onclick="confirmDeposit()">ВЫСТАВИТЬ СЧЕТ</button>
+            <button class="action-btn secondary" onclick="closeDepositModal()">ОТМЕНА</button>
+        </div>
     </div>
 
     <div class="navbar">
-        <button class="nav-btn active" onclick="switchTab('roulette')">🎰 Рулетка</button>
-        <button class="nav-btn" onclick="switchTab('crash')">🚀 Ракета</button>
-        <button class="nav-btn" onclick="switchTab('slots')">🍒 Слоты</button>
+        <button class="nav-btn active" onclick="switchTab('roulette')"><span>🎡</span> Рулетка</button>
+        <button class="nav-btn" onclick="switchTab('crash')"><span>🚀</span> Ракета</button>
+        <button class="nav-btn" onclick="switchTab('slots')"><span>🎰</span> Слоты</button>
     </div>
 
     <div id="roulette" class="game-container active">
@@ -120,210 +158,213 @@
                 <div class="pointer"></div>
                 <div class="wheel" id="wheel"></div>
             </div>
-            <div class="log-text" id="rouletteLog">Умножь свои звезды!</div>
+            <div class="log-text" id="rouletteLog">Испытай свою удачу!</div>
             <button class="action-btn" id="spinBtn">КРУТИТЬ (10 ⭐️)</button>
         </div>
     </div>
 
     <div id="crash" class="game-container">
         <div class="panel">
-            <div class="log-text" id="crashStatus">Ожидание ставки...</div>
+            <div class="log-text" id="crashStatus">Готов к запуску</div>
             <div class="crash-display" id="multiplier">1.00x</div>
-            <div class="log-text" id="crashLog">Чем выше, тем больше приз</div>
+            <div class="log-text" id="crashLog">Успей забрать до взрыва!</div>
             <button class="action-btn" id="crashActionBtn">СТАВКА (10 ⭐️)</button>
         </div>
     </div>
 
     <div id="slots" class="game-container">
         <div class="panel">
-            <div class="log-text">Собери 3 одинаковых!</div>
+            <div class="log-text">Собери 3 одинаковых символа!</div>
             <div class="slots-container">
-                <div class="slot-reel" id="reel1">🍒</div>
-                <div class="slot-reel" id="reel2">🍋</div>
-                <div class="slot-reel" id="reel3">💎</div>
+                <div class="slot-reel" id="reel1">7️⃣</div>
+                <div class="slot-reel" id="reel2">7️⃣</div>
+                <div class="slot-reel" id="reel3">7️⃣</div>
             </div>
-            <div class="log-text" id="slotsLog">Выигрыш до 500 ⭐️</div>
+            <div class="log-text" id="slotsLog">Макс. выигрыш: 500 ⭐️</div>
             <button class="action-btn" id="slotsBtn">ИГРАТЬ (10 ⭐️)</button>
         </div>
     </div>
 
     <div id="adminPanel">
-        <span style="color: #fff; font-size: 12px; display:block; margin-bottom:5px;">👑 ПАНЕЛЬ АДМИНА</span>
-        <button class="admin-btn" onclick="addAdminStars()">+ 1000 ⭐️</button>
-        <button class="admin-btn" onclick="resetBalance()">Обнулить</button>
+        <span style="font-size: 20px;">👑</span>
+        <button class="admin-btn" onclick="addAdminStars()">+1000 ⭐️</button>
+        <button class="admin-btn" style="background: #333;" onclick="resetBalance()">Сброс</button>
     </div>
 
     <script>
-        // ==========================================
-        // ⚙️ СИСТЕМНЫЕ НАСТРОЙКИ (ДЛЯ ТЕБЯ)
-        // ==========================================
-        
-        // ВПИШИ СЮДА СВОЙ TELEGRAM ID (Цифры)
-        const ADMIN_ID =  5450885290; 
+        // =========================================================================
+        // ⚙️ ПАНЕЛЬ УПРАВЛЕНИЯ КАЗИНО (НАСТРОЙКИ ДЛЯ АДМИНА)
+        // =========================================================================
+        const ADMIN_ID = 5450885290; // <-- ВПИШИ СВОЙ ID СЮДА
 
-        // НАСТРОЙКИ ШАНСОВ И ВЫПЛАТ
         const GAME_CONFIG = {
-            betAmount: 10, // Стоимость одной игры (для всех игр)
-            
+            betAmount: 10, // Цена одной игры для всех режимов
+
+            // 🎡 ШАНСЫ ДЛЯ РУЛЕТКИ (Сумма всех 'chance' строго должна быть равна 100)
             roulette: [
-                { id: 0, name: "💎 Джекпот", payout: 500, chance: 2 },
-                { id: 1, name: "😢 Пусто", payout: 0, chance: 43 },
-                { id: 2, name: "💵 Удвоение", payout: 20, chance: 15 },
-                { id: 3, name: "😢 Пусто", payout: 0, chance: 30 },
-                { id: 4, name: "💰 Мега Куш", payout: 100, chance: 5 },
-                { id: 5, name: "😢 Пусто", payout: 0, chance: 5 }
+                { id: 0, name: "💎 Джекпот", payout: 500, chance: 1 },  // Выигрыш 500 ⭐️ (1% шанс)
+                { id: 1, name: "😢 Пусто", payout: 0, chance: 45 },    // Проигрыш (45% шанс)
+                { id: 2, name: "💵 Удвоение", payout: 20, chance: 10 },// Выигрыш 20 ⭐️ (10% шанс)
+                { id: 3, name: "😢 Пусто", payout: 0, chance: 35 },    // Проигрыш (35% шанс)
+                { id: 4, name: "💰 Мега Куш", payout: 100, chance: 4 },// Выигрыш 100 ⭐️ (4% шанс)
+                { id: 5, name: "😢 Пусто", payout: 0, chance: 5 }      // Проигрыш (5% шанс)
             ],
-            
+
+            // 🚀 ШАНСЫ ДЛЯ РАКЕТЫ
             crash: {
-                instantCrashChance: 5, 
-                houseEdge: 0.85, 
-                maxMultiplier: 50.00
+                instantCrashChance: 10, // 10% шанс, что ракета взорвется на 1.00x мгновенно
+                houseEdge: 0.85,        // Маржа казино. Чем меньше число (например 0.50), тем быстрее взрывается ракета. Норма: 0.85 - 0.95.
+                maxMultiplier: 100.00   // Максимально возможный икс
             },
 
+            // 🎰 ШАНСЫ ДЛЯ СЛОТОВ
             slots: {
-                winChance: 20, // 20% шанс выиграть в слотах
+                winChance: 15, // Общий шанс (15%) на то, что выпадут три одинаковых символа
                 payouts: {
-                    "🍒": 20, // 3 вишни = 20 звезд
-                    "🍋": 50,
-                    "🍉": 100,
-                    "💎": 500 // 3 алмаза = джекпот
+                    "🍒": 20,  // Если выпадут 3 вишни, игрок получит 20 ⭐️
+                    "🍋": 50,  // 3 лимона = 50 ⭐️
+                    "🍉": 100, // 3 арбуза = 100 ⭐️
+                    "💎": 500  // 3 алмаза = 500 ⭐️
                 }
             }
         };
+        // =========================================================================
 
-        // ==========================================
-        // 🧠 ИНИЦИАЛИЗАЦИЯ И БАЛАНС
-        // ==========================================
         let tg = window.Telegram?.WebApp || null;
-        if (tg) { try { tg.expand(); } catch(e) {} }
+        if (tg) { try { tg.expand(); tg.setHeaderColor('#0f0c29'); } catch(e) {} }
 
-        // Загружаем баланс из памяти телефона (или даем 50 звезд новичку)
-        let userBalance = parseInt(localStorage.getItem('casino_balance')) || 50;
+        // --- ЛОГИКА АДМИН ПАНЕЛИ ---
+        const userId = tg?.initDataUnsafe?.user?.id || 0;
+        const adminPanel = document.getElementById('adminPanel');
+        if (userId === ADMIN_ID || !tg) { adminPanel.style.display = 'flex'; } else { adminPanel.remove(); }
+
+        // --- БАЛАНС ---
+        let userBalance = parseInt(localStorage.getItem('casino_bal')) || 50;
         updateBalanceUI();
 
         function updateBalanceUI() {
             document.getElementById('uiBalance').innerText = `${userBalance} ⭐️`;
-            localStorage.setItem('casino_balance', userBalance);
+            localStorage.setItem('casino_bal', userBalance);
         }
 
         function checkBalance() {
             if (userBalance < GAME_CONFIG.betAmount) {
                 if(tg) tg.HapticFeedback.notificationOccurred('error');
-                alert("Недостаточно Звезд! Нажми 'ПОПОЛНИТЬ'");
+                openDepositModal();
                 return false;
             }
             return true;
         }
 
-        // Проверка на админа
-        let userId = tg?.initDataUnsafe?.user?.id || 0;
-        if (userId === ADMIN_ID || !tg) { // Оставляем || !tg чтобы ты видел админку с компа
-            document.getElementById('adminPanel').style.display = 'block';
-        }
-
         function addAdminStars() { userBalance += 1000; updateBalanceUI(); }
         function resetBalance() { userBalance = 0; updateBalanceUI(); }
 
-        // Пополнение (Сигнал боту)
-        function requestDeposit() {
-            if (tg) {
-                // Отправляем боту команду на генерацию счета.
-                // Бот должен поймать это через content_types=['web_app_data']
-                tg.sendData(JSON.stringify({action: "deposit"}));
-                tg.close(); // Закрываем веб-апп, чтобы юзер увидел счет в чате
+        // --- ЛОГИКА ДЕПОЗИТА (РУЧНОЙ ВВОД) ---
+        function openDepositModal() {
+            document.getElementById('depositModal').style.display = 'flex';
+            if(tg) tg.HapticFeedback.impactOccurred('light');
+        }
+
+        function closeDepositModal() {
+            document.getElementById('depositModal').style.display = 'none';
+        }
+
+        function confirmDeposit() {
+            const amountInput = document.getElementById('depositInput').value;
+            const amount = parseInt(amountInput);
+
+            if (isNaN(amount) || amount <= 0) {
+                alert("Пожалуйста, введите корректное количество звезд.");
+                return;
+            }
+
+            if (tg && tg.sendData) {
+                // Передаем боту команду и введенную сумму
+                tg.sendData(JSON.stringify({ action: "deposit_stars", amount: amount }));
+                tg.close();
             } else {
-                alert("В реальном боте эта кнопка закроет сайт и пришлет счет на оплату Звезд в чат.");
+                alert(`(Симуляция вне Telegram) Запрос боту на покупку ${amount} ⭐️ отправлен!`);
+                closeDepositModal();
             }
         }
 
-        // --- НАВИГАЦИЯ И ЗВУКИ ---
+        // --- НАВИГАЦИЯ ---
         function switchTab(tabId) {
             document.querySelectorAll('.game-container').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-            event.target.classList.add('active');
+            event.currentTarget.classList.add('active');
             if(tg) tg.HapticFeedback.selectionChanged();
         }
 
         function vibrate(type) {
-            if(tg && tg.HapticFeedback) {
-                try {
-                    if (type === 'win') tg.HapticFeedback.notificationOccurred('success');
-                    else if (type === 'lose') tg.HapticFeedback.notificationOccurred('error');
-                    else tg.HapticFeedback.impactOccurred(type);
-                } catch(e){}
-            }
+            if(!tg || !tg.HapticFeedback) return;
+            try {
+                if (type === 'win') tg.HapticFeedback.notificationOccurred('success');
+                else if (type === 'lose') tg.HapticFeedback.notificationOccurred('error');
+                else tg.HapticFeedback.impactOccurred(type);
+            } catch(e){}
         }
 
-        // ==========================================
-        // 🎰 РУЛЕТКА
-        // ==========================================
+        // --- РУЛЕТКА ---
         let isSpinning = false; let currentRotation = 0;
         document.getElementById('spinBtn').addEventListener('click', () => {
             if (isSpinning || !checkBalance()) return;
-            
             userBalance -= GAME_CONFIG.betAmount; updateBalanceUI();
             isSpinning = true; vibrate('medium');
-            
-            const btn = document.getElementById('spinBtn');
-            const log = document.getElementById('rouletteLog');
-            btn.disabled = true; log.innerText = "Крутим..."; log.style.color = "var(--text-muted)";
 
-            let rand = Math.random() * 100; let sum = 0, winId = 0;
+            const btn = document.getElementById('spinBtn'), log = document.getElementById('rouletteLog');
+            btn.disabled = true; log.innerText = "Колесо крутится..."; log.style.color = "var(--text-muted)";
+
+            let rand = Math.random() * 100, sum = 0, winId = 0;
             for (let p of GAME_CONFIG.roulette) { sum += p.chance; if (rand <= sum) { winId = p.id; break; } }
-
             const winner = GAME_CONFIG.roulette.find(p => p.id === winId);
-            currentRotation += 1800 + (360 - (winId * 60)) - 30 + (Math.random() * 40 - 20);
+
+            currentRotation += 2160 + (360 - (winId * 60)) - 30 + (Math.random() * 40 - 20);
             document.getElementById('wheel').style.transform = `rotate(${currentRotation}deg)`;
 
             setTimeout(() => {
                 isSpinning = false; btn.disabled = false;
                 if (winner.payout > 0) {
                     userBalance += winner.payout; updateBalanceUI();
-                    log.innerText = `Выигрыш: ${winner.payout} ⭐️!`;
-                    log.style.color = "var(--accent)"; vibrate('win');
+                    log.innerText = `+${winner.payout} ⭐️ (${winner.name})`; log.style.color = "var(--accent)"; vibrate('win');
                 } else {
-                    log.innerText = "Проигрыш!";
-                    log.style.color = "var(--danger)"; vibrate('lose');
+                    log.innerText = "Проигрыш!"; log.style.color = "var(--danger)"; vibrate('lose');
                 }
             }, 4000);
         });
 
-        // ==========================================
-        // 🚀 РАКЕТА (CRASH)
-        // ==========================================
+        // --- РАКЕТА ---
         let crashState = 'idle'; let currentMult = 1.00, crashPoint = 1.00, crashStart;
         const multDisplay = document.getElementById('multiplier'), crashBtn = document.getElementById('crashActionBtn'), crashLog = document.getElementById('crashLog'), crashStatus = document.getElementById('crashStatus');
 
         crashBtn.addEventListener('click', () => {
             if (crashState === 'idle') {
                 if (!checkBalance()) return;
-                userBalance -= GAME_CONFIG.betAmount; updateBalanceUI();
-                vibrate('light');
+                userBalance -= GAME_CONFIG.betAmount; updateBalanceUI(); vibrate('light');
                 crashState = 'flying'; currentMult = 1.00; crashStart = Date.now();
-                
+
                 let r = Math.random() * 100;
                 if (r <= GAME_CONFIG.crash.instantCrashChance) crashPoint = 1.00;
                 else crashPoint = Math.min(GAME_CONFIG.crash.maxMultiplier, Math.max(1.01, GAME_CONFIG.crash.houseEdge / Math.random()));
-                
-                crashBtn.innerText = "ЗАБРАТЬ ДЕНЬГИ"; crashBtn.classList.add('cashout');
+
+                crashBtn.innerText = "ЗАБРАТЬ КУШ"; crashBtn.classList.add('cashout');
                 crashStatus.innerText = "В ПОЛЕТЕ..."; crashStatus.style.color = "var(--accent)";
                 multDisplay.className = 'crash-display flying';
-                if (crashPoint === 1.00) setTimeout(() => triggerCrash(1.00), 100);
-                else requestAnimationFrame(updateCrash);
+                if (crashPoint === 1.00) setTimeout(() => triggerCrash(1.00), 100); else requestAnimationFrame(updateCrash);
             } else if (crashState === 'flying') {
                 crashState = 'idle'; vibrate('win');
                 let win = Math.floor(GAME_CONFIG.betAmount * currentMult);
                 userBalance += win; updateBalanceUI();
                 multDisplay.className = 'crash-display';
                 crashStatus.innerText = "УСПЕХ!"; crashStatus.style.color = "var(--accent)";
-                crashLog.innerText = `Забрал: ${win} ⭐️`; crashLog.style.color = "var(--accent)";
+                crashLog.innerText = `Выплата: ${win} ⭐️`; crashLog.style.color = "var(--accent)";
                 crashBtn.innerText = `СТАВКА (${GAME_CONFIG.betAmount} ⭐️)`; crashBtn.classList.remove('cashout');
-                setTimeout(() => multDisplay.innerText = `КРАШ ${crashPoint.toFixed(2)}x`, 1000);
+                setTimeout(() => multDisplay.innerText = `${crashPoint.toFixed(2)}x`, 1000);
             } else if (crashState === 'crashed') {
                 crashState = 'idle'; multDisplay.innerText = "1.00x"; multDisplay.className = 'crash-display';
-                crashStatus.innerText = "Ожидание ставки..."; crashStatus.style.color = "var(--text-muted)";
-                crashLog.innerText = "Сделай ставку"; crashLog.style.color = "var(--text-muted)";
+                crashStatus.innerText = "Готов к запуску"; crashStatus.style.color = "var(--text-muted)";
+                crashLog.innerText = "Успей забрать до взрыва!"; crashLog.style.color = "var(--text-muted)";
                 crashBtn.innerText = `СТАВКА (${GAME_CONFIG.betAmount} ⭐️)`; crashBtn.classList.remove('cashout');
             }
         });
@@ -332,66 +373,50 @@
             if (crashState !== 'flying') return;
             currentMult = Math.pow(Math.E, 0.1 * ((Date.now() - crashStart) / 1000));
             if (currentMult >= crashPoint) return triggerCrash(crashPoint);
-            multDisplay.innerText = currentMult.toFixed(2) + 'x';
-            requestAnimationFrame(updateCrash);
+            multDisplay.innerText = currentMult.toFixed(2) + 'x'; requestAnimationFrame(updateCrash);
         }
 
         function triggerCrash(pt) {
             crashState = 'crashed'; vibrate('lose');
             multDisplay.innerText = pt.toFixed(2) + 'x'; multDisplay.className = 'crash-display crashed';
             crashStatus.innerText = "ВЗРЫВ!"; crashStatus.style.color = "var(--danger)";
-            crashLog.innerText = "Сгорело!"; crashLog.style.color = "var(--danger)";
+            crashLog.innerText = "Ставка сгорела"; crashLog.style.color = "var(--danger)";
             crashBtn.innerText = "ПОПРОБОВАТЬ СНОВА"; crashBtn.classList.remove('cashout');
         }
 
-        // ==========================================
-        // 🍒 СЛОТЫ
-        // ==========================================
-        let slotsSpinning = false;
-        const emojis = Object.keys(GAME_CONFIG.slots.payouts);
-
+        // --- СЛОТЫ ---
+        let slotsSpinning = false; const emojis = Object.keys(GAME_CONFIG.slots.payouts);
         document.getElementById('slotsBtn').addEventListener('click', () => {
             if (slotsSpinning || !checkBalance()) return;
             userBalance -= GAME_CONFIG.betAmount; updateBalanceUI();
             slotsSpinning = true; vibrate('medium');
 
-            const btn = document.getElementById('slotsBtn');
-            const log = document.getElementById('slotsLog');
+            const btn = document.getElementById('slotsBtn'), log = document.getElementById('slotsLog');
             btn.disabled = true; log.innerText = "Вращение..."; log.style.color = "var(--text-muted)";
-            
+
             const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
             reels.forEach(r => r.classList.add('spinning'));
 
-            // Логика победы/поражения
             let isWin = (Math.random() * 100) <= GAME_CONFIG.slots.winChance;
-            let resultEmojis = [];
-
+            let res = [];
             if (isWin) {
-                // Выбираем случайный символ и делаем все 3 одинаковыми
                 let winEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-                resultEmojis = [winEmoji, winEmoji, winEmoji];
+                res = [winEmoji, winEmoji, winEmoji];
             } else {
-                // Генерируем 3 случайных, гарантируя, что они не все одинаковые
                 do {
-                    resultEmojis = [
-                        emojis[Math.floor(Math.random() * emojis.length)],
-                        emojis[Math.floor(Math.random() * emojis.length)],
-                        emojis[Math.floor(Math.random() * emojis.length)]
-                    ];
-                } while (resultEmojis[0] === resultEmojis[1] && resultEmojis[1] === resultEmojis[2]);
+                    res = [emojis[Math.floor(Math.random() * emojis.length)], emojis[Math.floor(Math.random() * emojis.length)], emojis[Math.floor(Math.random() * emojis.length)]];
+                } while (res[0] === res[1] && res[1] === res[2]);
             }
 
-            // Остановка анимации по очереди
-            setTimeout(() => { reels[0].classList.remove('spinning'); reels[0].innerText = resultEmojis[0]; vibrate('light'); }, 1000);
-            setTimeout(() => { reels[1].classList.remove('spinning'); reels[1].innerText = resultEmojis[1]; vibrate('light'); }, 1500);
-            setTimeout(() => { 
-                reels[2].classList.remove('spinning'); reels[2].innerText = resultEmojis[2]; 
-                
+            setTimeout(() => { reels[0].classList.remove('spinning'); reels[0].innerText = res[0]; vibrate('light'); }, 800);
+            setTimeout(() => { reels[1].classList.remove('spinning'); reels[1].innerText = res[1]; vibrate('light'); }, 1400);
+            setTimeout(() => {
+                reels[2].classList.remove('spinning'); reels[2].innerText = res[2];
                 slotsSpinning = false; btn.disabled = false;
                 if (isWin) {
-                    let winAmount = GAME_CONFIG.slots.payouts[resultEmojis[0]];
+                    let winAmount = GAME_CONFIG.slots.payouts[res[0]];
                     userBalance += winAmount; updateBalanceUI();
-                    log.innerText = `МЕГА КУШ: ${winAmount} ⭐️!`; log.style.color = "var(--accent)"; vibrate('win');
+                    log.innerText = `+${winAmount} ⭐️!`; log.style.color = "var(--accent)"; vibrate('win');
                 } else {
                     log.innerText = "Не повезло!"; log.style.color = "var(--danger)"; vibrate('lose');
                 }
