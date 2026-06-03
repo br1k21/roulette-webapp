@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Telegram Casino Mini App</title>
+    <title>Casino Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        /* Жестко задаем темную тему, чтобы избежать белого экрана */
         :root {
-            --bg-color: var(--tg-theme-bg-color, #0f1015);
-            --text-color: var(--tg-theme-text-color, #ffffff);
+            --bg-color: #0f1015;
+            --text-color: #ffffff;
             --accent-color: #00ffcc;
             --danger-color: #ff3366;
             --panel-bg: rgba(255, 255, 255, 0.05);
@@ -32,13 +33,11 @@
             overflow: hidden;
         }
 
-        /* --- НАВИГАЦИЯ --- */
         .navbar {
             display: flex;
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.6);
             padding: 10px;
             gap: 10px;
-            backdrop-filter: blur(10px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
@@ -62,7 +61,6 @@
             box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
         }
 
-        /* --- КОНТЕЙНЕРЫ ИГР --- */
         .game-container {
             display: none;
             flex: 1;
@@ -70,19 +68,12 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            animation: fadeIn 0.4s ease-out;
         }
 
         .game-container.active {
             display: flex;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* --- ОБЩИЕ ЭЛЕМЕНТЫ --- */
         .panel {
             background: var(--panel-bg);
             border-radius: 20px;
@@ -90,9 +81,8 @@
             width: 100%;
             max-width: 350px;
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
 
         .action-btn {
@@ -107,16 +97,13 @@
             cursor: pointer;
             text-transform: uppercase;
             box-shadow: 0 5px 20px rgba(0, 255, 204, 0.3);
-            transition: transform 0.1s, filter 0.2s;
             margin-top: 20px;
         }
 
-        .action-btn:active { transform: scale(0.95); }
         .action-btn:disabled {
             background: #555;
             color: #888;
             box-shadow: none;
-            transform: none;
         }
 
         .action-btn.cashout { 
@@ -125,7 +112,6 @@
             color: #fff;
         }
 
-        /* --- РУЛЕТКА --- */
         .roulette-wrapper {
             position: relative;
             width: 260px;
@@ -143,7 +129,6 @@
             border-right: 15px solid transparent;
             border-top: 30px solid #fff;
             z-index: 10;
-            filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.6));
         }
 
         .wheel {
@@ -159,31 +144,19 @@
                 #2a2a35 300deg 360deg
             );
             transition: transform 4s cubic-bezier(0.2, 0.8, 0.2, 1);
-            box-shadow: 0 0 25px rgba(0, 255, 204, 0.2);
         }
 
         .result-text { font-size: 20px; font-weight: bold; margin-top: 15px; min-height: 28px; color: #aaa;}
 
-        /* --- CRASH (РАКЕТА) --- */
         .crash-display {
             font-size: 64px;
             font-weight: 900;
             margin: 30px 0;
             font-variant-numeric: tabular-nums;
-            text-shadow: 0 0 20px rgba(255,255,255,0.2);
-            transition: color 0.3s;
         }
 
-        .crash-display.crashed {
-            color: var(--danger-color);
-            text-shadow: 0 0 30px rgba(255, 51, 102, 0.6);
-            animation: shake 0.4s;
-        }
-
-        .crash-display.flying {
-            color: var(--accent-color);
-            text-shadow: 0 0 30px rgba(0, 255, 204, 0.5);
-        }
+        .crash-display.crashed { color: var(--danger-color); }
+        .crash-display.flying { color: var(--accent-color); }
 
         .status-badge {
             display: inline-block;
@@ -192,27 +165,19 @@
             border-radius: 20px;
             font-size: 14px;
             font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-        }
-
-        @keyframes shake {
-            0% { transform: translateX(0); }
-            25% { transform: translateX(-5px) rotate(-5deg); }
-            50% { transform: translateX(5px) rotate(5deg); }
-            75% { transform: translateX(-5px) rotate(-5deg); }
-            100% { transform: translateX(0); }
+            color: #fff;
         }
     </style>
 </head>
 <body>
 
+    <!-- Навигация -->
     <div class="navbar">
         <button class="nav-btn active" onclick="switchTab('roulette')">🎰 Рулетка</button>
         <button class="nav-btn" onclick="switchTab('crash')">🚀 Ракета</button>
     </div>
 
+    <!-- ИГРА 1: РУЛЕТКА -->
     <div id="roulette" class="game-container active">
         <div class="panel">
             <div class="roulette-wrapper">
@@ -220,26 +185,38 @@
                 <div class="wheel" id="wheel"></div>
             </div>
             <div class="result-text" id="rouletteResult">Испытай удачу!</div>
-            <button class="action-btn" id="spinBtn">КРУТИТЬ (10 ⭐️)</button>
+            <button class="action-btn" id="spinBtn">КРУТИТЬ</button>
         </div>
     </div>
 
+    <!-- ИГРА 2: CRASH -->
     <div id="crash" class="game-container">
         <div class="panel">
             <div class="status-badge" id="crashStatus">Готов к запуску</div>
             <div class="crash-display" id="multiplier">1.00x</div>
             <div class="result-text" id="crashLog">Сделай ставку до взлета</div>
-            <button class="action-btn" id="crashActionBtn">СТАВКА (10 ⭐️)</button>
+            <button class="action-btn" id="crashActionBtn">СТАВКА</button>
         </div>
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+        // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ TELEGRAM
+        let tg = null;
+        if (window.Telegram && window.Telegram.WebApp) {
+            tg = window.Telegram.WebApp;
+            try { tg.expand(); } catch(e) {}
+        }
 
-        // ==========================================
-        // ⚙️ ПАНЕЛЬ УПРАВЛЕНИЯ ШАНСАМИ (ДЛЯ АДМИНА)
-        // ==========================================
+        function playVibration(type) {
+            if (tg && tg.HapticFeedback) {
+                try {
+                    if (type === 'success' || type === 'error') tg.HapticFeedback.notificationOccurred(type);
+                    else if (type === 'select') tg.HapticFeedback.selectionChanged();
+                    else tg.HapticFeedback.impactOccurred(type);
+                } catch(e) {}
+            }
+        }
+
         const GAME_CONFIG = {
             roulette: [
                 { id: 0, name: "💎 Джекпот (1000⭐️)", chance: 1 },    
@@ -255,25 +232,23 @@
                 maxMultiplier: 100.00
             }
         };
-        // ==========================================
 
-        // --- ЛОГИКА НАВИГАЦИИ ---
         function switchTab(tabId) {
             document.querySelectorAll('.game-container').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             event.target.classList.add('active');
-            try { tg.HapticFeedback.selectionChanged(); } catch(e) {}
+            playVibration('select');
         }
 
-        // --- ЛОГИКА РУЛЕТКИ ---
+        // РУЛЕТКА
         let currentRotation = 0;
         let isSpinning = false;
 
         document.getElementById('spinBtn').addEventListener('click', () => {
             if (isSpinning) return;
             isSpinning = true;
-            try { tg.HapticFeedback.impactOccurred('medium'); } catch(e) {}
+            playVibration('medium');
             
             const btn = document.getElementById('spinBtn');
             const resText = document.getElementById('rouletteResult');
@@ -300,18 +275,13 @@
                 const winner = GAME_CONFIG.roulette.find(p => p.id === winningSector);
                 resText.innerText = winner.name;
                 resText.style.color = winner.name.includes("Пусто") ? "#ff3366" : "#00ffcc";
-                
                 isSpinning = false;
                 btn.disabled = false;
-                
-                try {
-                    if(!winner.name.includes("Пусто")) tg.HapticFeedback.notificationOccurred('success');
-                    else tg.HapticFeedback.notificationOccurred('error');
-                } catch(e) {}
+                playVibration(winner.name.includes("Пусто") ? 'error' : 'success');
             }, 4000);
         });
 
-        // --- ЛОГИКА CRASH (РАКЕТА) ---
+        // CRASH
         let crashState = 'idle'; 
         let currentMultiplier = 1.00;
         let crashPoint = 1.00;
@@ -324,7 +294,7 @@
         const crashLog = document.getElementById('crashLog');
 
         crashBtn.addEventListener('click', () => {
-            try { tg.HapticFeedback.impactOccurred('light'); } catch(e) {}
+            playVibration('light');
             if (crashState === 'idle') startGame();
             else if (crashState === 'flying') cashOut();
             else if (crashState === 'crashed') resetCrash();
@@ -336,7 +306,6 @@
             startTime = Date.now();
             
             let randPercent = Math.random() * 100;
-            
             if (randPercent <= GAME_CONFIG.crash.instantCrashChance) {
                 crashPoint = 1.00; 
             } else {
@@ -353,16 +322,12 @@
             multDisplay.classList.remove('crashed');
             multDisplay.classList.add('flying');
 
-            if (crashPoint === 1.00) {
-                setTimeout(() => crash(crashPoint), 100);
-            } else {
-                crashInterval = requestAnimationFrame(updateMultiplier);
-            }
+            if (crashPoint === 1.00) setTimeout(() => crash(1.00), 100);
+            else crashInterval = requestAnimationFrame(updateMultiplier);
         }
 
         function updateMultiplier() {
             if (crashState !== 'flying') return;
-
             let elapsed = (Date.now() - startTime) / 1000; 
             currentMultiplier = Math.pow(Math.E, 0.1 * elapsed); 
 
@@ -370,7 +335,6 @@
                 crash(crashPoint);
                 return;
             }
-
             multDisplay.innerText = currentMultiplier.toFixed(2) + 'x';
             crashInterval = requestAnimationFrame(updateMultiplier);
         }
@@ -379,7 +343,7 @@
             if (crashState !== 'flying') return;
             crashState = 'idle'; 
             cancelAnimationFrame(crashInterval);
-            try { tg.HapticFeedback.notificationOccurred('success'); } catch(e) {}
+            playVibration('success');
             multDisplay.classList.remove('flying');
             
             let winAmount = (10 * currentMultiplier).toFixed(0);
@@ -388,20 +352,18 @@
             crashLog.innerText = `Вы забрали выигрыш: ${winAmount} ⭐️`;
             crashLog.style.color = "#00ffcc";
             
-            crashBtn.innerText = "НОВАЯ ИГРА (10 ⭐️)";
+            crashBtn.innerText = "НОВАЯ ИГРА";
             crashBtn.classList.remove('cashout');
             
             setTimeout(() => {
-                multDisplay.innerText = `КРАШ НА ${crashPoint.toFixed(2)}x`;
-                multDisplay.style.fontSize = "32px";
-                setTimeout(() => multDisplay.style.fontSize = "64px", 2000);
+                multDisplay.innerText = `КРАШ ${crashPoint.toFixed(2)}x`;
             }, 1000);
         }
 
         function crash(point) {
             crashState = 'crashed';
             cancelAnimationFrame(crashInterval);
-            try { tg.HapticFeedback.notificationOccurred('error'); } catch(e) {}
+            playVibration('error');
             
             multDisplay.innerText = point.toFixed(2) + 'x';
             multDisplay.classList.remove('flying');
@@ -424,7 +386,7 @@
             statusBadge.style.color = "#fff";
             crashLog.innerText = "Сделай ставку до взлета";
             crashLog.style.color = "#aaa";
-            crashBtn.innerText = "СТАВКА (10 ⭐️)";
+            crashBtn.innerText = "СТАВКА";
             startGame();
         }
     </script>
