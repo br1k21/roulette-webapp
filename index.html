@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рулетка</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            background-color: var(--tg-theme-bg-color, #1e1e1e);
+            color: var(--tg-theme-text-color, #ffffff);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: sans-serif;
+            overflow: hidden;
+        }
+        .roulette-container {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin-bottom: 30px;
+        }
+        /* Указатель сверху колеса */
+        .pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0; height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #ffcc00;
+            z-index: 10;
+            filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.5));
+        }
+        /* Само колесо, разделенное на 6 секторов (по 60 градусов) */
+        .wheel {
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            border: 4px solid #fff;
+            background: conic-gradient(
+                #e74c3c 0deg 60deg,
+                #2c3e50 60deg 120deg,
+                #e74c3c 120deg 180deg,
+                #2c3e50 180deg 240deg,
+                #e74c3c 240deg 300deg,
+                #2c3e50 300deg 360deg
+            );
+            transition: transform 4s cubic-bezier(0.25, 1, 0.5, 1);
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+        .btn {
+            background-color: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        .btn:active { transform: translateY(2px); }
+        #resultText {
+            margin-top: 20px;
+            font-size: 22px;
+            font-weight: bold;
+            text-align: center;
+            min-height: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="roulette-container">
+        <div class="pointer"></div>
+        <div class="wheel" id="wheel"></div>
+    </div>
+
+    <button class="btn" id="spinBtn">КРУТИТЬ БАРАБАН</button>
+    <div id="resultText">Испытай удачу!</div>
+
+    <script>
+        // Инициализация Telegram Web App
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Разворачиваем на весь экран
+
+        // Настройка секторов (визуально их 6) и их ШАНСОВ в %
+        const prizes = [
+            { id: 0, name: "💎 Джекпот!", chance: 2 },        // Сектор 1 (0-60°)
+            { id: 1, name: "😢 Пусто", chance: 38 },          // Сектор 2 (60-120°)
+            { id: 2, name: "💵 Средний приз", chance: 15 },   // Сектор 3 (120-180°)
+            { id: 3, name: "😢 Пусто", chance: 30 },          // Сектор 4 (180-240°)
+            { id: 4, name: "💰 Большой куш", chance: 5 },     // Сектор 5 (240-300°)
+            { id: 5, name: "😢 Пусто", chance: 10 }           // Сектор 6 (300-360°)
+        ];
+        // Сумма шансов = 100%
+
+        let currentRotation = 0;
+        let isSpinning = false;
+
+        document.getElementById('spinBtn').addEventListener('click', () => {
+            if (isSpinning) return;
+            isSpinning = true;
+            document.getElementById('resultText').innerText = "Крутим...";
+
+            // 1. Логика генерации случайного числа на основе шансов
+            let rand = Math.random() * 100;
+            let sum = 0;
+            let winningSector = 0;
+
+            for (let i = 0; i < prizes.length; i++) {
+                sum += prizes[i].chance;
+                if (rand <= sum) {
+                    winningSector = prizes[i].id;
+                    break;
+                }
+            }
+
+            // 2. Расчет угла поворота
+            // Добавляем 5 полных оборотов (1800°) для визуальной красоты
+            const spins = 1800;
+            // Каждый сектор занимает 60 градусов.
+            // Чтобы нужный сектор оказался под указателем (сверху), нужно повернуть колесо.
+            const degreePerSector = 60;
+            // Рандомный сдвиг внутри самого сектора, чтобы стрелка не останавливалась ровно по центру
+            const randomOffset = Math.floor(Math.random() * 40) - 20;
+
+            // Формула: текущий угол + 5 оборотов + сдвиг к нужному сектору (360 - id * 60) минус половина сектора (30) для центрирования
+            const targetRotation = currentRotation + spins + (360 - (winningSector * degreePerSector)) - 30 + randomOffset;
+
+            currentRotation = targetRotation;
+
+            // 3. Анимация
+            const wheel = document.getElementById('wheel');
+            wheel.style.transform = `rotate(${currentRotation}deg)`;
+
+            // 4. Показ результата через 4 секунды (время CSS-анимации)
+            setTimeout(() => {
+                const winner = prizes.find(p => p.id === winningSector);
+                document.getElementById('resultText').innerText = winner.name;
+                isSpinning = false;
+
+                // Вибрация телефона при остановке (если поддерживается)
+                tg.HapticFeedback.notificationOccurred('success');
+            }, 4000);
+        });
+    </script>
+</body>
+</html>
