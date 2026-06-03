@@ -1,4 +1,239 @@
-<script>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Telegram Casino Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #0f1015);
+            --text-color: var(--tg-theme-text-color, #ffffff);
+            --accent-color: #00ffcc;
+            --danger-color: #ff3366;
+            --panel-bg: rgba(255, 255, 255, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- НАВИГАЦИЯ --- */
+        .navbar {
+            display: flex;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px;
+            gap: 10px;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 12px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-color);
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-btn.active {
+            background: var(--accent-color);
+            color: #000;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+        }
+
+        /* --- КОНТЕЙНЕРЫ ИГР --- */
+        .game-container {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .game-container.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- ОБЩИЕ ЭЛЕМЕНТЫ --- */
+        .panel {
+            background: var(--panel-bg);
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .action-btn {
+            background: linear-gradient(45deg, #00ffcc, #00b3ff);
+            color: #000;
+            border: none;
+            padding: 16px 20px;
+            font-size: 18px;
+            font-weight: 800;
+            border-radius: 14px;
+            width: 100%;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 5px 20px rgba(0, 255, 204, 0.3);
+            transition: transform 0.1s, filter 0.2s;
+            margin-top: 20px;
+        }
+
+        .action-btn:active { transform: scale(0.95); }
+        .action-btn:disabled {
+            background: #555;
+            color: #888;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .action-btn.cashout { 
+            background: linear-gradient(45deg, #ff9900, #ff5500); 
+            box-shadow: 0 5px 20px rgba(255, 153, 0, 0.4); 
+            color: #fff;
+        }
+
+        /* --- РУЛЕТКА --- */
+        .roulette-wrapper {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            margin: 0 auto 20px auto;
+        }
+
+        .pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0; height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #fff;
+            z-index: 10;
+            filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.6));
+        }
+
+        .wheel {
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            border: 4px solid var(--accent-color);
+            background: conic-gradient(
+                #1a1a24 0deg 60deg, 
+                #2a2a35 60deg 120deg, 
+                #1a1a24 120deg 180deg, 
+                #2a2a35 180deg 240deg, 
+                #1a1a24 240deg 300deg, 
+                #2a2a35 300deg 360deg
+            );
+            transition: transform 4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 0 25px rgba(0, 255, 204, 0.2);
+        }
+
+        .result-text { font-size: 20px; font-weight: bold; margin-top: 15px; min-height: 28px; color: #aaa;}
+
+        /* --- CRASH (РАКЕТА) --- */
+        .crash-display {
+            font-size: 64px;
+            font-weight: 900;
+            margin: 30px 0;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 0 20px rgba(255,255,255,0.2);
+            transition: color 0.3s;
+        }
+
+        .crash-display.crashed {
+            color: var(--danger-color);
+            text-shadow: 0 0 30px rgba(255, 51, 102, 0.6);
+            animation: shake 0.4s;
+        }
+
+        .crash-display.flying {
+            color: var(--accent-color);
+            text-shadow: 0 0 30px rgba(0, 255, 204, 0.5);
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.1);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px) rotate(-5deg); }
+            50% { transform: translateX(5px) rotate(5deg); }
+            75% { transform: translateX(-5px) rotate(-5deg); }
+            100% { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <button class="nav-btn active" onclick="switchTab('roulette')">🎰 Рулетка</button>
+        <button class="nav-btn" onclick="switchTab('crash')">🚀 Ракета</button>
+    </div>
+
+    <div id="roulette" class="game-container active">
+        <div class="panel">
+            <div class="roulette-wrapper">
+                <div class="pointer"></div>
+                <div class="wheel" id="wheel"></div>
+            </div>
+            <div class="result-text" id="rouletteResult">Испытай удачу!</div>
+            <button class="action-btn" id="spinBtn">КРУТИТЬ (10 ⭐️)</button>
+        </div>
+    </div>
+
+    <div id="crash" class="game-container">
+        <div class="panel">
+            <div class="status-badge" id="crashStatus">Готов к запуску</div>
+            <div class="crash-display" id="multiplier">1.00x</div>
+            <div class="result-text" id="crashLog">Сделай ставку до взлета</div>
+            <button class="action-btn" id="crashActionBtn">СТАВКА (10 ⭐️)</button>
+        </div>
+    </div>
+
+    <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
@@ -6,28 +241,17 @@
         // ⚙️ ПАНЕЛЬ УПРАВЛЕНИЯ ШАНСАМИ (ДЛЯ АДМИНА)
         // ==========================================
         const GAME_CONFIG = {
-            // 🎰 НАСТРОЙКИ РУЛЕТКИ (Сумма шансов должна быть ровно 100)
             roulette: [
-                { id: 0, name: "💎 Джекпот (1000⭐️)", chance: 1 },    // 1%
-                { id: 1, name: "😢 Пусто", chance: 45 },              // 45%
-                { id: 2, name: "💵 Средний (50⭐️)", chance: 10 },     // 10%
-                { id: 3, name: "😢 Пусто", chance: 35 },              // 35%
-                { id: 4, name: "💰 Большой (200⭐️)", chance: 4 },     // 4%
-                { id: 5, name: "😢 Пусто", chance: 5 }                // 5%
+                { id: 0, name: "💎 Джекпот (1000⭐️)", chance: 1 },    
+                { id: 1, name: "😢 Пусто", chance: 45 },              
+                { id: 2, name: "💵 Средний (50⭐️)", chance: 10 },     
+                { id: 3, name: "😢 Пусто", chance: 35 },              
+                { id: 4, name: "💰 Большой (200⭐️)", chance: 4 },     
+                { id: 5, name: "😢 Пусто", chance: 5 }                
             ],
-
-            // 🚀 НАСТРОЙКИ РАКЕТЫ (CRASH)
             crash: {
-                // Шанс моментального взрыва прямо на старте (1.00x).
-                // Указывается в процентах. Например, 5 = ракета взорвется сразу в 5% случаев.
                 instantCrashChance: 5, 
-
-                // Жадность казино. Влияет на высоту полета.
-                // 0.99 = почти честная игра (ракета летит высоко).
-                // 0.85 = жадное казино (ракета часто взрывается на низких иксах типа 1.2x - 1.5x).
                 houseEdge: 0.90,
-
-                // Максимально возможный икс (чтобы не разориться)
                 maxMultiplier: 100.00
             }
         };
@@ -39,7 +263,7 @@
             document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             event.target.classList.add('active');
-            tg.HapticFeedback.selectionChanged();
+            try { tg.HapticFeedback.selectionChanged(); } catch(e) {}
         }
 
         // --- ЛОГИКА РУЛЕТКИ ---
@@ -49,7 +273,7 @@
         document.getElementById('spinBtn').addEventListener('click', () => {
             if (isSpinning) return;
             isSpinning = true;
-            tg.HapticFeedback.impactOccurred('medium');
+            try { tg.HapticFeedback.impactOccurred('medium'); } catch(e) {}
             
             const btn = document.getElementById('spinBtn');
             const resText = document.getElementById('rouletteResult');
@@ -57,7 +281,6 @@
             resText.style.color = '#aaa';
             resText.innerText = "Крутим...";
 
-            // 1. Берем настройки шансов из нашего конфига сверху
             let rand = Math.random() * 100;
             let sum = 0, winningSector = 0;
             for (let p of GAME_CONFIG.roulette) {
@@ -65,7 +288,7 @@
                 if (rand <= sum) { winningSector = p.id; break; }
             }
 
-            const spins = 1800; // 5 оборотов
+            const spins = 1800; 
             const degreePerSector = 60;
             const randomOffset = Math.floor(Math.random() * 40) - 20;
             currentRotation = currentRotation + spins + (360 - (winningSector * degreePerSector)) - 30 + randomOffset;
@@ -81,13 +304,15 @@
                 isSpinning = false;
                 btn.disabled = false;
                 
-                if(!winner.name.includes("Пусто")) tg.HapticFeedback.notificationOccurred('success');
-                else tg.HapticFeedback.notificationOccurred('error');
+                try {
+                    if(!winner.name.includes("Пусто")) tg.HapticFeedback.notificationOccurred('success');
+                    else tg.HapticFeedback.notificationOccurred('error');
+                } catch(e) {}
             }, 4000);
         });
 
         // --- ЛОГИКА CRASH (РАКЕТА) ---
-        let crashState = 'idle'; // idle, flying, crashed
+        let crashState = 'idle'; 
         let currentMultiplier = 1.00;
         let crashPoint = 1.00;
         let crashInterval;
@@ -99,7 +324,7 @@
         const crashLog = document.getElementById('crashLog');
 
         crashBtn.addEventListener('click', () => {
-            tg.HapticFeedback.impactOccurred('light');
+            try { tg.HapticFeedback.impactOccurred('light'); } catch(e) {}
             if (crashState === 'idle') startGame();
             else if (crashState === 'flying') cashOut();
             else if (crashState === 'crashed') resetCrash();
@@ -110,14 +335,11 @@
             currentMultiplier = 1.00;
             startTime = Date.now();
             
-            // 2. Расчет краш-поинта на основе конфига
             let randPercent = Math.random() * 100;
             
             if (randPercent <= GAME_CONFIG.crash.instantCrashChance) {
-                // Моментальный проигрыш (сработал шанс из конфига)
                 crashPoint = 1.00; 
             } else {
-                // Классический расчет криптоказино с учетом маржи
                 let rawCrash = GAME_CONFIG.crash.houseEdge / Math.random();
                 crashPoint = Math.min(GAME_CONFIG.crash.maxMultiplier, Math.max(1.01, rawCrash)); 
             }
@@ -131,7 +353,6 @@
             multDisplay.classList.remove('crashed');
             multDisplay.classList.add('flying');
 
-            // Если краш моментальный, сразу взрываем
             if (crashPoint === 1.00) {
                 setTimeout(() => crash(crashPoint), 100);
             } else {
@@ -158,7 +379,7 @@
             if (crashState !== 'flying') return;
             crashState = 'idle'; 
             cancelAnimationFrame(crashInterval);
-            tg.HapticFeedback.notificationOccurred('success');
+            try { tg.HapticFeedback.notificationOccurred('success'); } catch(e) {}
             multDisplay.classList.remove('flying');
             
             let winAmount = (10 * currentMultiplier).toFixed(0);
@@ -180,7 +401,7 @@
         function crash(point) {
             crashState = 'crashed';
             cancelAnimationFrame(crashInterval);
-            tg.HapticFeedback.notificationOccurred('error');
+            try { tg.HapticFeedback.notificationOccurred('error'); } catch(e) {}
             
             multDisplay.innerText = point.toFixed(2) + 'x';
             multDisplay.classList.remove('flying');
@@ -207,3 +428,5 @@
             startGame();
         }
     </script>
+</body>
+</html>
