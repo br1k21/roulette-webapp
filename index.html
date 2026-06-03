@@ -1,154 +1,209 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Рулетка</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body {
-            background-color: var(--tg-theme-bg-color, #1e1e1e);
-            color: var(--tg-theme-text-color, #ffffff);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            font-family: sans-serif;
-            overflow: hidden;
-        }
-        .roulette-container {
-            position: relative;
-            width: 280px;
-            height: 280px;
-            margin-bottom: 30px;
-        }
-        /* Указатель сверху колеса */
-        .pointer {
-            position: absolute;
-            top: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0; height: 0;
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-top: 30px solid #ffcc00;
-            z-index: 10;
-            filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.5));
-        }
-        /* Само колесо, разделенное на 6 секторов (по 60 градусов) */
-        .wheel {
-            width: 100%; height: 100%;
-            border-radius: 50%;
-            border: 4px solid #fff;
-            background: conic-gradient(
-                #e74c3c 0deg 60deg,
-                #2c3e50 60deg 120deg,
-                #e74c3c 120deg 180deg,
-                #2c3e50 180deg 240deg,
-                #e74c3c 240deg 300deg,
-                #2c3e50 300deg 360deg
-            );
-            transition: transform 4s cubic-bezier(0.25, 1, 0.5, 1);
-            box-shadow: 0 0 15px rgba(0,0,0,0.5);
-        }
-        .btn {
-            background-color: var(--tg-theme-button-color, #3390ec);
-            color: var(--tg-theme-button-text-color, #ffffff);
-            border: none;
-            padding: 15px 40px;
-            font-size: 20px;
-            font-weight: bold;
-            border-radius: 12px;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-        }
-        .btn:active { transform: translateY(2px); }
-        #resultText {
-            margin-top: 20px;
-            font-size: 22px;
-            font-weight: bold;
-            text-align: center;
-            min-height: 30px;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="roulette-container">
-        <div class="pointer"></div>
-        <div class="wheel" id="wheel"></div>
-    </div>
-
-    <button class="btn" id="spinBtn">КРУТИТЬ БАРАБАН</button>
-    <div id="resultText">Испытай удачу!</div>
-
-    <script>
-        // Инициализация Telegram Web App
+<script>
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Разворачиваем на весь экран
+        tg.expand();
 
-        // Настройка секторов (визуально их 6) и их ШАНСОВ в %
-        const prizes = [
-            { id: 0, name: "💎 Джекпот!", chance: 2 },        // Сектор 1 (0-60°)
-            { id: 1, name: "😢 Пусто", chance: 38 },          // Сектор 2 (60-120°)
-            { id: 2, name: "💵 Средний приз", chance: 15 },   // Сектор 3 (120-180°)
-            { id: 3, name: "😢 Пусто", chance: 30 },          // Сектор 4 (180-240°)
-            { id: 4, name: "💰 Большой куш", chance: 5 },     // Сектор 5 (240-300°)
-            { id: 5, name: "😢 Пусто", chance: 10 }           // Сектор 6 (300-360°)
-        ];
-        // Сумма шансов = 100%
+        // ==========================================
+        // ⚙️ ПАНЕЛЬ УПРАВЛЕНИЯ ШАНСАМИ (ДЛЯ АДМИНА)
+        // ==========================================
+        const GAME_CONFIG = {
+            // 🎰 НАСТРОЙКИ РУЛЕТКИ (Сумма шансов должна быть ровно 100)
+            roulette: [
+                { id: 0, name: "💎 Джекпот (1000⭐️)", chance: 1 },    // 1%
+                { id: 1, name: "😢 Пусто", chance: 45 },              // 45%
+                { id: 2, name: "💵 Средний (50⭐️)", chance: 10 },     // 10%
+                { id: 3, name: "😢 Пусто", chance: 35 },              // 35%
+                { id: 4, name: "💰 Большой (200⭐️)", chance: 4 },     // 4%
+                { id: 5, name: "😢 Пусто", chance: 5 }                // 5%
+            ],
 
+            // 🚀 НАСТРОЙКИ РАКЕТЫ (CRASH)
+            crash: {
+                // Шанс моментального взрыва прямо на старте (1.00x).
+                // Указывается в процентах. Например, 5 = ракета взорвется сразу в 5% случаев.
+                instantCrashChance: 5, 
+
+                // Жадность казино. Влияет на высоту полета.
+                // 0.99 = почти честная игра (ракета летит высоко).
+                // 0.85 = жадное казино (ракета часто взрывается на низких иксах типа 1.2x - 1.5x).
+                houseEdge: 0.90,
+
+                // Максимально возможный икс (чтобы не разориться)
+                maxMultiplier: 100.00
+            }
+        };
+        // ==========================================
+
+        // --- ЛОГИКА НАВИГАЦИИ ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.game-container').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        // --- ЛОГИКА РУЛЕТКИ ---
         let currentRotation = 0;
         let isSpinning = false;
 
         document.getElementById('spinBtn').addEventListener('click', () => {
             if (isSpinning) return;
             isSpinning = true;
-            document.getElementById('resultText').innerText = "Крутим...";
+            tg.HapticFeedback.impactOccurred('medium');
+            
+            const btn = document.getElementById('spinBtn');
+            const resText = document.getElementById('rouletteResult');
+            btn.disabled = true;
+            resText.style.color = '#aaa';
+            resText.innerText = "Крутим...";
 
-            // 1. Логика генерации случайного числа на основе шансов
+            // 1. Берем настройки шансов из нашего конфига сверху
             let rand = Math.random() * 100;
-            let sum = 0;
-            let winningSector = 0;
-
-            for (let i = 0; i < prizes.length; i++) {
-                sum += prizes[i].chance;
-                if (rand <= sum) {
-                    winningSector = prizes[i].id;
-                    break;
-                }
+            let sum = 0, winningSector = 0;
+            for (let p of GAME_CONFIG.roulette) {
+                sum += p.chance;
+                if (rand <= sum) { winningSector = p.id; break; }
             }
 
-            // 2. Расчет угла поворота
-            // Добавляем 5 полных оборотов (1800°) для визуальной красоты
-            const spins = 1800;
-            // Каждый сектор занимает 60 градусов.
-            // Чтобы нужный сектор оказался под указателем (сверху), нужно повернуть колесо.
+            const spins = 1800; // 5 оборотов
             const degreePerSector = 60;
-            // Рандомный сдвиг внутри самого сектора, чтобы стрелка не останавливалась ровно по центру
             const randomOffset = Math.floor(Math.random() * 40) - 20;
+            currentRotation = currentRotation + spins + (360 - (winningSector * degreePerSector)) - 30 + randomOffset;
 
-            // Формула: текущий угол + 5 оборотов + сдвиг к нужному сектору (360 - id * 60) минус половина сектора (30) для центрирования
-            const targetRotation = currentRotation + spins + (360 - (winningSector * degreePerSector)) - 30 + randomOffset;
-
-            currentRotation = targetRotation;
-
-            // 3. Анимация
             const wheel = document.getElementById('wheel');
             wheel.style.transform = `rotate(${currentRotation}deg)`;
 
-            // 4. Показ результата через 4 секунды (время CSS-анимации)
             setTimeout(() => {
-                const winner = prizes.find(p => p.id === winningSector);
-                document.getElementById('resultText').innerText = winner.name;
+                const winner = GAME_CONFIG.roulette.find(p => p.id === winningSector);
+                resText.innerText = winner.name;
+                resText.style.color = winner.name.includes("Пусто") ? "#ff3366" : "#00ffcc";
+                
                 isSpinning = false;
-
-                // Вибрация телефона при остановке (если поддерживается)
-                tg.HapticFeedback.notificationOccurred('success');
+                btn.disabled = false;
+                
+                if(!winner.name.includes("Пусто")) tg.HapticFeedback.notificationOccurred('success');
+                else tg.HapticFeedback.notificationOccurred('error');
             }, 4000);
         });
+
+        // --- ЛОГИКА CRASH (РАКЕТА) ---
+        let crashState = 'idle'; // idle, flying, crashed
+        let currentMultiplier = 1.00;
+        let crashPoint = 1.00;
+        let crashInterval;
+        let startTime;
+
+        const multDisplay = document.getElementById('multiplier');
+        const crashBtn = document.getElementById('crashActionBtn');
+        const statusBadge = document.getElementById('crashStatus');
+        const crashLog = document.getElementById('crashLog');
+
+        crashBtn.addEventListener('click', () => {
+            tg.HapticFeedback.impactOccurred('light');
+            if (crashState === 'idle') startGame();
+            else if (crashState === 'flying') cashOut();
+            else if (crashState === 'crashed') resetCrash();
+        });
+
+        function startGame() {
+            crashState = 'flying';
+            currentMultiplier = 1.00;
+            startTime = Date.now();
+            
+            // 2. Расчет краш-поинта на основе конфига
+            let randPercent = Math.random() * 100;
+            
+            if (randPercent <= GAME_CONFIG.crash.instantCrashChance) {
+                // Моментальный проигрыш (сработал шанс из конфига)
+                crashPoint = 1.00; 
+            } else {
+                // Классический расчет криптоказино с учетом маржи
+                let rawCrash = GAME_CONFIG.crash.houseEdge / Math.random();
+                crashPoint = Math.min(GAME_CONFIG.crash.maxMultiplier, Math.max(1.01, rawCrash)); 
+            }
+            
+            crashBtn.innerText = "ЗАБРАТЬ ДЕНЬГИ";
+            crashBtn.classList.add('cashout');
+            statusBadge.innerText = "🚀 ПОЛЕТ...";
+            statusBadge.style.color = "#00ffcc";
+            crashLog.innerText = "Летим!";
+            crashLog.style.color = "#aaa";
+            multDisplay.classList.remove('crashed');
+            multDisplay.classList.add('flying');
+
+            // Если краш моментальный, сразу взрываем
+            if (crashPoint === 1.00) {
+                setTimeout(() => crash(crashPoint), 100);
+            } else {
+                crashInterval = requestAnimationFrame(updateMultiplier);
+            }
+        }
+
+        function updateMultiplier() {
+            if (crashState !== 'flying') return;
+
+            let elapsed = (Date.now() - startTime) / 1000; 
+            currentMultiplier = Math.pow(Math.E, 0.1 * elapsed); 
+
+            if (currentMultiplier >= crashPoint) {
+                crash(crashPoint);
+                return;
+            }
+
+            multDisplay.innerText = currentMultiplier.toFixed(2) + 'x';
+            crashInterval = requestAnimationFrame(updateMultiplier);
+        }
+
+        function cashOut() {
+            if (crashState !== 'flying') return;
+            crashState = 'idle'; 
+            cancelAnimationFrame(crashInterval);
+            tg.HapticFeedback.notificationOccurred('success');
+            multDisplay.classList.remove('flying');
+            
+            let winAmount = (10 * currentMultiplier).toFixed(0);
+            statusBadge.innerText = "УСПЕХ!";
+            statusBadge.style.color = "#00ffcc";
+            crashLog.innerText = `Вы забрали выигрыш: ${winAmount} ⭐️`;
+            crashLog.style.color = "#00ffcc";
+            
+            crashBtn.innerText = "НОВАЯ ИГРА (10 ⭐️)";
+            crashBtn.classList.remove('cashout');
+            
+            setTimeout(() => {
+                multDisplay.innerText = `КРАШ НА ${crashPoint.toFixed(2)}x`;
+                multDisplay.style.fontSize = "32px";
+                setTimeout(() => multDisplay.style.fontSize = "64px", 2000);
+            }, 1000);
+        }
+
+        function crash(point) {
+            crashState = 'crashed';
+            cancelAnimationFrame(crashInterval);
+            tg.HapticFeedback.notificationOccurred('error');
+            
+            multDisplay.innerText = point.toFixed(2) + 'x';
+            multDisplay.classList.remove('flying');
+            multDisplay.classList.add('crashed');
+            
+            statusBadge.innerText = "💥 ВЗРЫВ";
+            statusBadge.style.color = "#ff3366";
+            crashLog.innerText = "Ставка сгорела!";
+            crashLog.style.color = "#ff3366";
+            
+            crashBtn.innerText = "ПОПРОБОВАТЬ СНОВА";
+            crashBtn.classList.remove('cashout');
+        }
+
+        function resetCrash() {
+            crashState = 'idle';
+            multDisplay.innerText = "1.00x";
+            multDisplay.classList.remove('crashed');
+            statusBadge.innerText = "Готов к запуску";
+            statusBadge.style.color = "#fff";
+            crashLog.innerText = "Сделай ставку до взлета";
+            crashLog.style.color = "#aaa";
+            crashBtn.innerText = "СТАВКА (10 ⭐️)";
+            startGame();
+        }
     </script>
-</body>
-</html>
